@@ -230,6 +230,7 @@ C_SRC += src/boards/$(BOARD)/pinconfig.c
 C_SRC += \
 	src/usb/usb_desc.c \
 	src/usb/msc_uf2.c \
+	src/usb/hf2.c \
 	src/usb/uf2/ghostfat.c \
 	src/usb/usb.c
 
@@ -241,6 +242,7 @@ C_SRC += \
 	$(TUSB_PATH)/device/usbd_control.c \
 	$(TUSB_PATH)/class/cdc/cdc_device.c \
 	$(TUSB_PATH)/class/msc/msc_device.c \
+	$(TUSB_PATH)/class/vendor/vendor_device.c \
 	$(TUSB_PATH)/tusb.c
 endif
 

@@ -28,6 +28,14 @@
 #include "tusb.h"
 #include "boards.h"
 
+enum {
+    ITF_NUM_CDC = 0  ,
+    ITF_NUM_CDC_DATA ,
+    ITF_NUM_MSC      ,
+    ITF_NUM_VENDOR   , // Forward: HF2 over WebUSB (src/usb/hf2.c)
+    ITF_NUM_TOTAL
+};
+
 void usb_desc_init(bool cdc_only);
 
 #endif /* USB_DESC_H_ */

@@ -165,6 +165,12 @@ static void disable_softdevice(void) {
 //
 //--------------------------------------------------------------------+
 int main(void) {
+  // Forward (MicroRGB): newer nRF52833 revisions lock the debug port on every reset unless
+  // firmware writes APPROTECT.DISABLE. Do what Nordic's nrfx (v2.11 system_nrf52_approtect.h)
+  // does: copy UICR.APPROTECT, so the port opens only when the UICR says HwDisabled (0x5A).
+  // Register address from nrfx v2.11 nrf52833.h; this tree's headers predate it.
+  *(volatile uint32_t *) 0x40000558UL = NRF_UICR->APPROTECT;
+
   // Populate Boot Address and MBR Param into MBR if not already
   // MBR_BOOTLOADER_ADDR/MBR_PARAM_PAGE_ADDR are used if available, else UICR registers are used
   // Note: skip it for now since this will prevent us to change the size of bootloader in the future

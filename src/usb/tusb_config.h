@@ -55,7 +55,11 @@
 #define CFG_TUD_CDC                 1
 #if !defined(SIGNED_FW) || defined(FORCE_UF2)
 #define CFG_TUD_MSC                 1
+#define CFG_TUD_VENDOR              1 // Forward: HF2 over WebUSB (src/usb/hf2.c)
 #endif
+
+#define CFG_TUD_VENDOR_RX_BUFSIZE   512
+#define CFG_TUD_VENDOR_TX_BUFSIZE   512
 
 /*------------------------------------------------------------------*/
 /* CLASS DRIVER

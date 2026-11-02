@@ -30,7 +30,8 @@ enum {
     STRID_PRODUCT      ,
     STRID_SERIAL       ,
     STRID_CDC          ,
-    STRID_MSC
+    STRID_MSC          ,
+    STRID_VENDOR
 };
 
 #if !defined(SIGNED_FW) || defined(FORCE_UF2)
@@ -48,7 +49,7 @@ tusb_desc_device_t desc_device =
 {
     .bLength            = sizeof(tusb_desc_device_t),
     .bDescriptorType    = TUSB_DESC_DEVICE,
-    .bcdUSB             = 0x0200,
+    .bcdUSB             = 0x0210, // 2.1: BOS descriptor for WebUSB (Forward, src/usb/hf2.c)
 
     // Use Interface Association Descriptor (IAD) for CDC
     // As required by USB Specs IAD's subclass must be common class (2) and protocol must be IAD (1)
@@ -79,31 +80,34 @@ uint8_t const * tud_descriptor_device_cb(void)
 // Configuration Descriptor
 //--------------------------------------------------------------------+
 
-enum {
-    ITF_NUM_CDC = 0  ,
-    ITF_NUM_CDC_DATA ,
-    ITF_NUM_MSC      ,
-    ITF_NUM_TOTAL
-};
-
 #if CFG_TUD_MSC
+// Forward: HF2 vendor interface, class 0xFF subclass 42 as MakeCode's WebUSB filter expects
+#define HF2_DESC_LEN  (9 + 7 + 7)
+#define HF2_DESCRIPTOR(_itfnum, _stridx, _epout, _epin, _epsize) \
+  9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, TUSB_CLASS_VENDOR_SPECIFIC, 42, 0, _stridx, \
+  7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_BULK, U16_TO_U8S_LE(_epsize), 0, \
+  7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_BULK, U16_TO_U8S_LE(_epsize), 0
+
 uint8_t desc_configuration_cdc_msc[] =
 {
   // Interface count, string index, total length, attribute, power in mA
-  TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN + TUD_MSC_DESC_LEN, 0, 100),
+  TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN + TUD_MSC_DESC_LEN + HF2_DESC_LEN, 0, 100),
 
   // Interface number, string index, EP notification address and size, EP data address (out, in) and size.
   TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, STRID_CDC, 0x81, 8, 0x02, 0x82, 64),
 
   // Interface number, string index, EP Out & EP In address, EP size
   TUD_MSC_DESCRIPTOR(ITF_NUM_MSC, STRID_MSC, 0x03, 0x83, 64),
+
+  // Interface number, string index, EP Out & EP In address, EP size
+  HF2_DESCRIPTOR(ITF_NUM_VENDOR, STRID_VENDOR, 0x04, 0x84, 64),
 };
 #endif
 
 uint8_t desc_configuration_cdc_only[] =
 {
   // Interface count, string index, total length, attribute, power in mA
-  TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL-1, 0, TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN, 0, 100),
+  TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_CDC_DATA+1, 0, TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN, 0, 100),
 
   // Interface number, string index, EP notification address and size, EP data address (out, in) and size.
   TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, STRID_CDC, 0x81, 8, 0x02, 0x82, 64),
@@ -167,6 +171,7 @@ char const* string_desc_arr [] =
   "nRF Serial",                  // 4: CDC Interface
 #if CFG_TUD_MSC
   "nRF UF2",                     // 5: MSC Interface
+  "HF2 WebUSB",                  // 6: HF2 vendor interface (Forward)
 #endif
 };
 
