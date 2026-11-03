@@ -74,7 +74,9 @@ void usb_init(bool cdc_only) {
     sd_power_usbregstatus_get(&usb_reg);
   } else {
     // Power module init
-    const nrfx_power_config_t pwr_cfg = {0};
+    // Forward: keep the board's REG1 DC/DC setting. nrfx_power_init() writes DCDCEN from this
+    // config, so {0} turned off the DC/DC that board_init() had just enabled (ENABLE_DCDC_1).
+    const nrfx_power_config_t pwr_cfg = { .dcdcen = (ENABLE_DCDC_1 == 1) };
     nrfx_power_init(&pwr_cfg);
 
     // Register USB power handler
